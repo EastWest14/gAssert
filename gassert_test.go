@@ -4,6 +4,18 @@ import (
 	"testing"
 )
 
+//*************** Example ***************
+
+func Example() {
+	someString := "Hello, world!"
+	//Assert will pass
+	Assert(len(someString) > 0, "String length is 0")
+
+	//Assert will fail
+	AssertSoft(2*2 == 5, "Two times two is not five")
+	//Output: Two times two is not five
+}
+
 //*************** Mock Structures ***************
 
 type mockProcessKiller struct {
@@ -23,41 +35,18 @@ func TestSetAssertFatal(t *testing.T) {
 		assertsAreFatal = startingAssertsAreFatal
 	}()
 
-	//Test enable
+	//Test making asserts fatal
 	assertsAreFatal = false
 	SetAssertFatal(true)
 	if !assertsAreFatal {
 		t.Error("Asserts were suppose to be set as fatal")
 	}
 
-	//Test dissable
+	//Test making asserts not fatal
 	assertsAreFatal = true
 	SetAssertFatal(false)
 	if assertsAreFatal {
 		t.Error("Assers were suppose to be set as not fatal")
-	}
-}
-
-func TestNoActionOnAssert(t *testing.T) {
-	//Re-setting the variable after the test
-	startingActionOnAssert := actionOnAssert
-	defer func() {
-		actionOnAssert = startingActionOnAssert
-	}()
-
-	wasHit := false
-	checkHitFunction := func(message string) {
-		wasHit = true
-	}
-	//Set the package variable
-	actionOnAssert = checkHitFunction
-	//Suppose to un-set the variable
-	NoActionOnAssert()
-
-	//Check if the assert action was un-set
-	actionOnAssert("")
-	if wasHit {
-		t.Error("Assert action executed despite being disabled")
 	}
 }
 
@@ -68,19 +57,46 @@ func TestSetActionOnAssert(t *testing.T) {
 		actionOnAssert = startingActionOnAssert
 	}()
 
-	actionOnAssert = func(message string) {
-		return
-	}
+	//Creating a mock function
 	wasHit := false
 	checkHitFunction := func(message string) {
 		wasHit = true
 	}
+
+	//Check if SetActionOnAssert really modifies the assert action
+	actionOnAssert = func(message string) {
+		return
+	}
 	SetActionOnAssert(checkHitFunction)
 	actionOnAssert("")
-
 	//Check correct function was called
 	if !wasHit {
 		t.Error("Failed to set function on assert")
+	}
+}
+
+func TestNoActionOnAssert(t *testing.T) {
+	//Re-setting the variable after the test
+	startingActionOnAssert := actionOnAssert
+	defer func() {
+		actionOnAssert = startingActionOnAssert
+	}()
+
+	//Creating a mock function
+	wasHit := false
+	checkHitFunction := func(message string) {
+		wasHit = true
+	}
+
+	//Set the assert action
+	actionOnAssert = checkHitFunction
+	//Un-set the assert action
+	NoActionOnAssert()
+
+	//Check if the assert action was un-set
+	actionOnAssert("")
+	if wasHit {
+		t.Error("Assert action executed despite being disabled")
 	}
 }
 
@@ -93,12 +109,13 @@ func TestAssertSoft(t *testing.T) {
 		actionOnAssert = startingActionOnAssert
 	}()
 
-	//Test assert on true
+	//Creating a mock function
 	wasHit := false
 	checkHitFunction := func(message string) {
 		wasHit = true
 	}
-	//Set the package variable
+
+	//Test assert on true
 	actionOnAssert = checkHitFunction
 	AssertSoft(true, "")
 	if wasHit {
@@ -130,21 +147,21 @@ func TestAssert(t *testing.T) {
 		assertsAreFatal = startingAssertsAreFatal
 	}()
 
-	//Mock setup
+	//Mocking the killProcess function
 	mockPK := mockProcessKiller{}
 	killProcessCommand = mockPK.mockKillProcessCommand
+	//Creating a mock function
 	var assertActionCalled bool
 	mockAssertAction := func(message string) {
 		assertActionCalled = true
 	}
-	//Set the package variable
 	actionOnAssert = mockAssertAction
 
 	//Assert should act like SoftAssert or HardAssert depending on the value of assertsAreFatal
 	cases := []struct {
 		assertConditionShouldPass bool
 		assertsAreFatal           bool
-		expectActionOnAlertCall   bool
+		expectActionOnAssertCall  bool
 		exceptKillProcessCall     bool
 	}{
 		{true, true, false, false},
@@ -153,14 +170,14 @@ func TestAssert(t *testing.T) {
 		{false, false, true, false},
 	}
 	for i, aCase := range cases {
-		//Pre-set before every case
+		//Pre-set mock variables before every case
 		assertActionCalled = false
 		mockPK.wasHit = false
 
 		assertsAreFatal = aCase.assertsAreFatal
 		Assert(aCase.assertConditionShouldPass, "")
-		//Check results of Assert
-		if assertActionCalled != aCase.expectActionOnAlertCall {
+		//Check expectations
+		if assertActionCalled != aCase.expectActionOnAssertCall {
 			t.Errorf("Assert action called/not called incorrectly in case %d", i)
 		}
 		if mockPK.wasHit != aCase.exceptKillProcessCall {
@@ -176,9 +193,10 @@ func TestAssertHard(t *testing.T) {
 		killProcessCommand = startingKillProcessCommand
 	}()
 
-	//Test assert on true
+	//Mocking the killProcess function
 	mockPK := mockProcessKiller{wasHit: false}
 	killProcessCommand = mockPK.mockKillProcessCommand
+	//Test assert on true
 	AssertHard(true, "")
 	if mockPK.wasHit {
 		t.Error("AssertHard fails on a true condition")
@@ -186,7 +204,6 @@ func TestAssertHard(t *testing.T) {
 
 	//Test assert on false
 	mockPK = mockProcessKiller{wasHit: false}
-	killProcessCommand = mockPK.mockKillProcessCommand
 	AssertHard(false, "")
 	if !mockPK.wasHit {
 		t.Error("AssertHard passes on a false condition")
@@ -202,10 +219,12 @@ func TestKillProcess(t *testing.T) {
 		killProcessCommand = startingKillProcessCommand
 	}()
 
+	//Mocking the process killProcessCommand
 	mockPK := mockProcessKiller{wasHit: false}
 	killProcessCommand = mockPK.mockKillProcessCommand
-	killProcess("Doesn't matter")
+
+	killProcess("")
 	if !mockPK.wasHit {
-		t.Error("Kill Process fails.")
+		t.Error("Kill Process not called")
 	}
 }

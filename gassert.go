@@ -1,3 +1,8 @@
+//Package gAssert is a utility that provides configurable runtime assertions.
+//Users can configure the package to run a custom action on every failed assert call.
+//Depending on runtime settings, a failed assert may kill the process.
+//This allows to have different behavior in testing and production environments.
+//Default behavior is to kill the process on a failed call to Assert.
 package gAssert
 
 import (
@@ -18,23 +23,23 @@ var actionOnAssert func(string) = func(message string) {
 	fmt.Println(message)
 }
 
-//NoActionOnAssert determines whether an alert will trigger an alert action.
-//Assert action typically logs out the message, removing it may improve performance.
+//SetActionOnAssert sets the action that will happen after an assert fails.
+//Default assert action prints out the message.
+func SetActionOnAssert(actionFunc func(message string)) {
+	actionOnAssert = actionFunc
+}
+
+//NoActionOnAssert sets the assert action to immediately return.
+//This option may improve performance.
 func NoActionOnAssert() {
 	actionOnAssert = func(message string) {
 		return
 	}
 }
 
-//SetActionOnAssert sets the action that will happen if the assert fails.
-//Assert action typically logs out the message, ignoring it may improve performance.
-func SetActionOnAssert(actionFunc func(message string)) {
-	actionOnAssert = actionFunc
-}
-
 //*************** Assert Statements ***************
 
-//AssertSoft triggers an assert action if the condition is false and returns.
+//AssertSoft triggers an assert action on a false condition, then returns.
 //Function doesn't kill the process regardless of the value of SetAssertFatal.
 func AssertSoft(condition bool, message string) {
 	if condition {
@@ -43,10 +48,11 @@ func AssertSoft(condition bool, message string) {
 	actionOnAssert(message)
 }
 
-//Assert triggers an assert action if the condition is false.
-//Assert action typically involves logging out the message.
-//After assert action assert kills the process or returns,
-//depending on how SetAssertFatal is set.
+//Assert triggers an assert action on a false condition.
+//Default assert action prints out the message.
+//Afterwards, the function kills the process or returns
+//depending on the value of SetAssertFatal.
+//Default behavior is to kill the process.
 func Assert(condition bool, message string) {
 	if condition {
 		return
@@ -57,7 +63,7 @@ func Assert(condition bool, message string) {
 	}
 }
 
-//AssertSoft triggers an assert action if the condition is false and kills
+//AssertHard triggers an assert action on a false condition, then kills
 //the process regardless of the value of SetAssertFatal.
 func AssertHard(condition bool, message string) {
 	if condition {
