@@ -34,24 +34,36 @@ func SetActionOnAssert(actionFunc func(message string)) {
 
 //*************** Assert Statements ***************
 
+//AssertSoft triggers an assert action if the condition is false and returns.
+//Function doesn't kill the process regardless of the value of SetAssertFatal.
+func AssertSoft(condition bool, message string) {
+	if condition {
+		return
+	}
+	actionOnAssert(message)
+}
+
 //Assert triggers an assert action if the condition is false.
 //Assert action typically involves logging out the message.
 //After assert action assert kills the process or returns,
 //depending on how SetAssertFatal is set.
 func Assert(condition bool, message string) {
-
-}
-
-//AssertSoft triggers an assert action if the condition is false and returns.
-//Function doesn't kill the process regardless of the value of SetAssertFatal.
-func AssertSoft(condition bool, message string) {
-
+	if condition {
+		return
+	}
+	actionOnAssert(message)
+	if assertsAreFatal {
+		killProcess(message)
+	}
 }
 
 //AssertSoft triggers an assert action if the condition is false and kills
 //the process regardless of the value of SetAssertFatal.
 func AssertHard(condition bool, message string) {
-
+	if condition {
+		return
+	}
+	killProcess(message)
 }
 
 //*************** Killing Process ***************
