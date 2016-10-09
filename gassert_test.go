@@ -28,7 +28,7 @@ func (pk *mockProcessKiller) mockKillProcessCommand(message string) {
 
 //*************** Test Setting Assert Package Behavior ***************
 
-func TestSetAssertFatal(t *testing.T) {
+func TestSetAssertsFatal(t *testing.T) {
 	//Re-setting the variable after the test
 	startingAssertsAreFatal := assertsAreFatal
 	defer func() {
@@ -37,14 +37,14 @@ func TestSetAssertFatal(t *testing.T) {
 
 	//Test making asserts fatal
 	assertsAreFatal = false
-	SetAssertFatal(true)
+	SetAssertsFatal(true)
 	if !assertsAreFatal {
 		t.Error("Asserts were suppose to be set as fatal")
 	}
 
 	//Test making asserts not fatal
 	assertsAreFatal = true
-	SetAssertFatal(false)
+	SetAssertsFatal(false)
 	if assertsAreFatal {
 		t.Error("Assers were suppose to be set as not fatal")
 	}

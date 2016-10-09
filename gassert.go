@@ -14,8 +14,8 @@ import (
 
 var assertsAreFatal bool = true
 
-//SetAssertFatal determines whether a failed Assert will kill the process.
-func SetAssertFatal(isFatal bool) {
+//SetAssertsFatal determines whether a failed Assert will kill the process.
+func SetAssertsFatal(isFatal bool) {
 	assertsAreFatal = isFatal
 }
 
@@ -40,7 +40,7 @@ func NoActionOnAssert() {
 //*************** Assert Statements ***************
 
 //AssertSoft triggers an assert action on a false condition, then returns.
-//Function doesn't kill the process regardless of the value of SetAssertFatal.
+//Function doesn't kill the process regardless of the value of SetAssertsFatal.
 func AssertSoft(condition bool, message string) {
 	if condition {
 		return
@@ -51,7 +51,7 @@ func AssertSoft(condition bool, message string) {
 //Assert triggers an assert action on a false condition.
 //Default assert action prints out the message.
 //Afterwards, the function kills the process or returns
-//depending on the value of SetAssertFatal.
+//depending on the value of SetAssertsFatal.
 //Default behavior is to kill the process.
 func Assert(condition bool, message string) {
 	if condition {
@@ -64,7 +64,7 @@ func Assert(condition bool, message string) {
 }
 
 //AssertHard triggers an assert action on a false condition, then kills
-//the process regardless of the value of SetAssertFatal.
+//the process regardless of the value of SetAssertsFatal.
 func AssertHard(condition bool, message string) {
 	if condition {
 		return
